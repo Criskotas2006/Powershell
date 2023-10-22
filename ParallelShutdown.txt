@@ -1,0 +1,68 @@
+$serverListFile = "C:\Path\to\serverlist.txt"  # Path to the server list text file
+
+$secpasswd = ConvertTo-SecureString 'YOUR_PASSWORD' -AsPlainText -Force
+$credentials = New-Object System.Management.Automation.PSCredential ('YOUR_USERNAME', $secpasswd)
+
+# Define the log file path
+$logFilePath = "C:\Path\to\logfile.txt"
+
+# Create or clear the log file
+$null | Out-File -FilePath $logFilePath -Force
+
+# Read the server list from the text file
+$serverList = Get-Content -Path $serverListFile
+
+foreach ($server in $serverList) {
+    $jobScriptBlock = {
+        Param (
+            $TargetServer,
+            $Creds
+        )
+
+        # Initialize the job output object
+        $output = [PSCustomObject]@{
+            ServerName = $TargetServer
+            Success = $false
+            Error = $null
+        }
+
+        try {
+            # Execute shutdown command on the target server
+            Stop-Computer -computername &targetserver  -Force
+            $output.Success = $true
+        } catch {
+            $output.Error = $_.Exception.Message
+        }
+
+        # Output the job result
+        $output
+    }
+
+    # Start the job to execute the script block on the remote server
+    $job = Start-Job -ScriptBlock $jobScriptBlock -ArgumentList $server, $credentials
+
+    # Output the job information to the log file
+    $jobInfo = [PSCustomObject]@{
+        ServerName = $server
+        JobId = $job.Id
+        State = $job.State
+    }
+    $jobInfo | Out-File -FilePath $logFilePath -Append
+}
+
+# Wait for all jobs to complete
+Get-Job | Wait-Job
+
+# Retrieve the job results
+$results = Get-Job | Receive-Job
+
+# Output the results and append them to the log file
+foreach ($result in $results) {
+    $result | Out-File -FilePath $logFilePath -Append
+    Write-Host "Job ID: $($result.JobId)"
+    Write-Host "State: $($result.State)"
+    Write-Host "=============================="
+}
+
+# Cleanup - remove completed jobs
+Get-Job | Remove-Job
