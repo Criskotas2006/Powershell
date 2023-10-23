@@ -1,0 +1,34 @@
+# Define the path to the list of servers and the output CSV file
+$serverListPath = "C:\LasTimereboot\Wave5e.txt"
+$outputCSVPath = "C:\LasTimereboot\salida5.csv"
+
+# Check if the server list file exists
+if (Test-Path -Path $serverListPath -PathType Leaf) {
+    # Initialize an empty array to collect results
+    $results = @()
+
+    # Read the list of servers from the file
+    $serverList = Get-Content -Path $serverListPath
+
+    # Loop through each server in the list
+    foreach ($server in $serverList) {
+        Write-Host "Checking Server $server"
+
+        # Retrieve the last boot time for the server
+        $bootInfo = Get-CimInstance -ClassName Win32_OperatingSystem -ComputerName $server | Select-Object -Property CSName, LastBootUpTime
+
+        # Add the result to the collection
+        $results += $bootInfo
+    }
+
+    # Check if the output CSV file exists
+    if (-not (Test-Path -Path $outputCSVPath -PathType Leaf)) {
+        # If it doesn't exist, create a new file with the header
+        "CSName,LastBootUpTime" | Set-Content -Path $outputCSVPath
+    }
+
+    # Export the results to the CSV file without type information and append to an existing file if it exists
+    $results | Export-Csv -Path $outputCSVPath -NoTypeInformation -Append
+} else {
+    Write-Host "The server list file '$serverListPath' does not exist."
+}
