@@ -1,0 +1,10 @@
+schtasks /query /V /FO CSV |
+ConvertFrom-Csv |
+Select-Object Taskname,@{n="RunAsUser";e={$_."Run As User"}} |
+where -Property RunAsUser -Like "*domain-account-as-a-service" |
+fl
+
+Ps: Remember must be run As Administrator
+
+Another little bit PS script....
+In summary, this PowerShell command queries the scheduled tasks on a Windows system, extracts specific properties (Taskname and RunAsUser), and filters the results to include only tasks where the "RunAsUser" contains the string "domain-account-as-a-service." It then displays the filtered results in a list format. This can be useful for identifying specific scheduled tasks that run under a particular user context.
