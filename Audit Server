@@ -1,0 +1,13 @@
+#Get-WmiObject -List | Where-Object Name -like *processor*
+Get-WmiObject CIM_Processor #info del procesador
+$ramSummary = Get-WmiObject CIM_PhysicalMemory | Select-Object -ExpandProperty Capacity | Measure-Object -Sum
+#(($ramSummary.Sum / 1024) / 1024)/1024 #info de la memoria en GB
+$ramSummary.Sum / 1GB
+#Get-PSDrive C
+$DiskSpace = Get-Volume C | Select-Object -Property Size 
+$DiskSpace.Size /1GB
+Get-NetAdapter | Select-Object {$_.MacAddress}
+Get-NetAdapter | Select-Object {$_.Name}
+$manufacturer = Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object {$_.Manufacturer}
+$manufacturer
+Get-ComputerInfo | Select-Object OsName
