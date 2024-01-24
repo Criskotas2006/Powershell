@@ -1,0 +1,16 @@
+# Define variables
+$ruleName = 'SQLServer-1433-Inbound'
+$ruleDisplayName = 'Allow MSSQLServer Inbound (TCP 1433)'
+$protocol = 'TCP'
+$localPort = 1433
+
+# Check if the rule already exists
+$existingRule = Get-NetFirewallRule -DisplayName $ruleDisplayName -ErrorAction SilentlyContinue
+
+if ($existingRule -eq $null) {
+    # Create an inbound rule
+    New-NetFirewallRule -DisplayName $ruleDisplayName -Name $ruleName -Direction Inbound -Protocol $protocol -LocalPort $localPort -Action Allow -Profile Any
+
+    Write-Host "Inbound firewall rule for MSSQLServer (TCP 1433) has been successfully created."
+} else {
+    Write-Host "Inbound firewall rule for MSSQLServer (TCP 1433) already exists."
